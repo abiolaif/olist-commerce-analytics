@@ -157,33 +157,33 @@ Rather than denormalizing order headers onto individual line items—which would
 ### 4.2 Functional Dependencies (FDs)
 
 * **`locations`**:
-  $$\text{zip\_code\_prefix} \rightarrow \{\text{city}, \text{state}\}$$
+  $$\texttt{zip\_code\_prefix} \rightarrow \{\texttt{city}, \texttt{state}\}$$
 
 * **`customer_accounts`**:
-  $$\text{customer\_unique\_id} \rightarrow \emptyset \quad (\text{entity key})$$
+  $$\texttt{customer\_unique\_id} \rightarrow \emptyset \quad (\text{entity key})$$
 
 * **`customers`**:
-  $$\text{customer\_id} \rightarrow \{\text{customer\_unique\_id}, \text{zip\_code\_prefix}\}$$
+  $$\texttt{customer\_id} \rightarrow \{\texttt{customer\_unique\_id}, \texttt{zip\_code\_prefix}\}$$
 
 * **`sellers`**:
-  $$\text{seller\_id} \rightarrow \text{zip\_code\_prefix}$$
+  $$\texttt{seller\_id} \rightarrow \texttt{zip\_code\_prefix}$$
 
 * **`products`**:
-  $$\text{product\_id} \rightarrow \{\text{product\_category\_name}, \text{product\_name\_length}, \text{product\_description\_length}, \text{product\_photos\_qty}, \text{product\_weight\_g}, \text{product\_length\_cm}, \text{product\_height\_cm}, \text{product\_width\_cm}\}$$
+  $$\texttt{product\_id} \rightarrow \{\texttt{product\_category\_name}, \texttt{product\_name\_length}, \texttt{product\_description\_length}, \texttt{product\_photos\_qty}, \texttt{product\_weight\_g}, \texttt{product\_length\_cm}, \texttt{product\_height\_cm}, \texttt{product\_width\_cm}\}$$
 
 * **`orders`**:
-  $$\text{order\_id} \rightarrow \{\text{customer\_id}, \text{order\_status}, \text{order\_purchase\_timestamp}, \text{order\_approved_at}, \text{order\_delivered\_carrier\_date}, \text{order\_delivered\_customer\_date}, \text{order\_estimated\_delivery\_date}\}$$
+  $$\texttt{order\_id} \rightarrow \{\texttt{customer\_id}, \texttt{order\_status}, \texttt{order\_purchase\_timestamp}, \texttt{order\_approved\_at}, \texttt{order\_delivered\_carrier\_date}, \texttt{order\_delivered\_customer\_date}, \texttt{order\_estimated\_delivery\_date}\}$$
   *(Note: `customer_id` is also a candidate key due to Olist's per-order token design, enforced via `UNIQUE`.)*
 
 * **`order_items`**:
-  $$\{\text{order\_id}, \text{order\_item\_id}\} \rightarrow \{\text{product\_id}, \text{seller\_id}, \text{shipping\_limit\_date}, \text{price}, \text{freight\_value}\}$$
+  $$\{\texttt{order\_id}, \texttt{order\_item\_id}\} \rightarrow \{\texttt{product\_id}, \texttt{seller\_id}, \texttt{shipping\_limit\_date}, \texttt{price}, \texttt{freight\_value}\}$$
 
 ### 4.3 Proof of Third Normal Form (3NF)
 
 1. **First Normal Form (1NF)**: Every attribute across all seven tables holds an atomic scalar value, repeating item groups are separated into `order_items`, and every table defines an explicit primary key.
 2. **Second Normal Form (2NF)**: Six of the seven tables have single-column primary keys and are automatically in 2NF. The sole composite-key table is `order_items(order_id, order_item_id)`. Every non-prime attribute in `order_items` (`product_id`, `seller_id`, `shipping_limit_date`, `price`, `freight_value`) depends on the **entire** composite key: a single `order_id` can contain distinct products, different sellers, and varying item prices/freight charges, while `order_item_id` (`1, 2, 3...`) has no meaning without `order_id`. Thus, no partial dependencies exist.
 3. **Third Normal Form (3NF)**: In the raw Olist CSVs, storing `customer_zip_code_prefix`, `customer_city`, and `customer_state` together inside `customers` (and similarly inside `sellers`) creates a **transitive functional dependency**:
-   $$\text{customer\_id} \rightarrow \text{zip\_code\_prefix} \rightarrow \{\text{city}, \text{state}\}$$
+   $$\texttt{customer\_id} \rightarrow \texttt{zip\_code\_prefix} \rightarrow \{\texttt{city}, \texttt{state}\}$$
    Decomposing `locations` removes this transitive dependency, eliminating update anomalies and inconsistent city spellings across shared postal prefixes. All remaining non-prime attributes depend directly and non-transitively on their table's candidate key(s).
 
 ### 4.4 Valid Domain Exceptions & Constraint Design
